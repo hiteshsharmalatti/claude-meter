@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body>
+<canvas id="c" width="256" height="256"></canvas>
+<script>
+const { ipcRenderer } = require('electron');
+
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = 256, H = 256;
+
+// ── Background ────────────────────────────────────────────────────────────────
+ctx.fillStyle = '#0e0e1a';
+ctx.beginPath();
+ctx.roundRect(0, 0, W, H, 28);
+ctx.fill();
+
+// ── Border ────────────────────────────────────────────────────────────────────
+ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+ctx.lineWidth = 2;
+ctx.beginPath();
+ctx.roundRect(1, 1, W - 2, H - 2, 27);
+ctx.stroke();
+
+// ── "Claude" text (top) ───────────────────────────────────────────────────────
+ctx.fillStyle = 'rgba(255,255,255,0.90)';
+ctx.font = 'bold 52px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
+ctx.textAlign = 'center';
+ctx.textBaseline = 'top';
+ctx.fillText('Claude', W / 2, 30);
+
+// ── Semicircle gauge arc (middle) ─────────────────────────────────────────────
+const cx = W / 2, cy = 158, radius = 68;
+const startAngle = Math.PI;     // left
+const endAngle   = 2 * Math.PI; // right
+
+// Track (dim background arc)
+ctx.beginPath();
+ctx.arc(cx, cy, radius, startAngle, endAngle);
+ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+ctx.lineWidth = 14;
+ctx.lineCap = 'butt';
+ctx.stroke();
+
+// Gradient fill arc — green → yellow → red
+const grad = ctx.createLinearGradient(cx - radius, 0, cx + radius, 0);
+grad.addColorStop(0,    '#22c55e');
+grad.addColorStop(0.45, '#eab308');
+grad.addColorStop(1.0,  '#ef4444');
+
+const fillEnd = startAngle + 0.65 * Math.PI; // ~65% fill
+ctx.beginPath();
+ctx.arc(cx, cy, radius, startAngle, fillEnd);
+ctx.strokeStyle = grad;
+ctx.lineWidth = 14;
+ctx.lineCap = 'butt';
+ctx.stroke();
+
+// ── "Meter" text (bottom) ─────────────────────────────────────────────────────
+ctx.fillStyle = '#a89ff5';
+ctx.font = 'bold 46px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
+ctx.textAlign = 'center';
+ctx.textBaseline = 'bottom';
+ctx.fillText('Meter', W / 2, H - 22);
+
+// ── Send PNG data to main process ─────────────────────────────────────────────
+ipcRenderer.send('icon-data', canvas.toDataURL('image/png'));
+</script>
+</body>
+</html>

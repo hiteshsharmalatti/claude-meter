@@ -1,0 +1,47 @@
+{
+  "name": "claude-meter",
+  "version": "1.0.0",
+  "description": "Claude usage meter desktop widget",
+  "main": "main.js",
+  "scripts": {
+    "create-icon": "electron create-icon.js",
+    "prestart": "electron create-icon.js",
+    "start": "electron .",
+    "build": "npm run create-icon && electron-builder",
+    "build:win": "npm run create-icon && electron-builder --win",
+    "build:mac": "npm run create-icon && electron-builder --mac"
+  },
+  "build": {
+    "appId": "com.claudemeter.app",
+    "productName": "Claude Meter",
+    "win": {
+      "target": "nsis",
+      "icon": "icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "icon.png",
+      "category": "public.app-category.utilities"
+    },
+    "dmg": {
+      "title": "Claude Meter"
+    },
+    "files": [
+      "main.js",
+      "index.html",
+      "icon.png",
+      "create-icon.js",
+      "icon-gen.html"
+    ]
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0"
+  }
+}

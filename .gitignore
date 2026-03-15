@@ -1,0 +1,6 @@
+node_modules/
+dist/
+icon.png
+.DS_Store
+*.log
+linkedin_post_image.html

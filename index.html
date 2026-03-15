@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: transparent; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+
+/* ── Theme variables (dark default) ───────────────────────────────────────── */
+.widget {
+  --bg:           rgba(14,14,26,0.96);
+  --border:       rgba(255,255,255,0.1);
+  --title-color:  rgba(255,255,255,0.38);
+  --icon-color:   rgba(255,255,255,0.25);
+  --icon-hover:   rgba(255,255,255,0.6);
+  --circle-bg:    rgba(255,255,255,0.07);
+  --circle-color: rgba(255,255,255,0.3);
+  --label-color:  rgba(255,255,255,0.28);
+  --divider-bg:   rgba(255,255,255,0.06);
+  --status-color: rgba(255,255,255,0.18);
+  --login-color:  rgba(255,255,255,0.6);
+  --mask:         rgba(14,14,26,0.97);
+  --track:        rgba(255,255,255,0.05);
+  --reset-color:  #eab308;
+}
+
+/* ── Light mode overrides ─────────────────────────────────────────────────── */
+.widget.light {
+  --bg:           rgba(245,245,250,0.97);
+  --border:       rgba(0,0,0,0.1);
+  --title-color:  rgba(0,0,0,0.45);
+  --icon-color:   rgba(0,0,0,0.3);
+  --icon-hover:   rgba(0,0,0,0.7);
+  --circle-bg:    rgba(0,0,0,0.07);
+  --circle-color: rgba(0,0,0,0.4);
+  --label-color:  rgba(0,0,0,0.4);
+  --divider-bg:   rgba(0,0,0,0.08);
+  --status-color: rgba(0,0,0,0.35);
+  --login-color:  rgba(0,0,0,0.6);
+  --mask:         rgba(245,245,250,0.97);
+  --track:        rgba(0,0,0,0.09);
+  --reset-color:  #a16207;
+}
+
+.widget {
+  width: 240px;
+  background: var(--bg);
+  border-radius: 18px;
+  border: 0.5px solid var(--border);
+  padding: 13px 13px 10px;
+  -webkit-app-region: drag;
+  transition: background 0.2s, border-color 0.2s;
+}
+.no-drag { -webkit-app-region: no-drag; }
+
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.hleft { display: flex; align-items: center; gap: 6px; }
+.dot { width: 5px; height: 5px; border-radius: 50%; background: #a89ff5; flex-shrink: 0; }
+.title { font-size: 9px; font-weight: 500; color: var(--title-color); letter-spacing: 0.1em; text-transform: uppercase; }
+.hright { display: flex; align-items: center; gap: 6px; }
+
+.refresh-btn, .theme-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--icon-color); font-size: 11px; padding: 0 2px;
+  line-height: 1; transition: color 0.15s;
+}
+.refresh-btn:hover, .theme-btn:hover { color: var(--icon-hover); }
+.refresh-btn.spinning { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.min-btn, .close-btn {
+  width: 15px; height: 15px; border-radius: 50%;
+  background: var(--circle-bg); border: none; cursor: pointer;
+  color: var(--circle-color); font-size: 10px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.min-btn:hover  { background: rgba(234,179,8,0.7);  color: white; }
+.close-btn:hover { background: rgba(226,75,74,0.7); color: white; }
+
+.gauges { display: flex; gap: 4px; }
+.gauge-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; }
+.gauge-label { font-size: 8px; color: var(--label-color); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 0px; }
+.divider { width: 0.5px; background: var(--divider-bg); align-self: stretch; margin: 4px 0; }
+
+/* SVG gauge colours driven by theme variables */
+.gauge-track { stroke: var(--track) !important; }
+#mask1, #mask2 { stroke: var(--mask) !important; }
+.widget.light #tks1 line,
+.widget.light #tks2 line { stroke: rgba(0,0,0,0.18) !important; }
+
+.reset-time, .weekly-reset {
+  font-size: 8px; letter-spacing: 0.04em; text-align: center; margin-top: 2px;
+}
+.reset-time   { color: var(--reset-color); white-space: nowrap; }
+.weekly-reset { color: var(--label-color); white-space: nowrap; }
+.status {
+  font-size: 8px; letter-spacing: 0.04em; text-align: center;
+  width: 100%; margin-top: 5px; color: var(--status-color);
+}
+.status.ok  { color: rgba(34,197,94,0.6); }
+.status.err { color: rgba(239,68,68,0.6); }
+
+.login-btn {
+  display: none;
+  background: rgba(168,159,245,0.15); border: 0.5px solid rgba(168,159,245,0.3);
+  border-radius: 6px; color: var(--login-color); font-size: 8px;
+  padding: 3px 8px; cursor: pointer; margin: 4px auto 0; letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.login-btn.show { display: block; }
+</style>
+</head>
+<body>
+<div class="widget">
+  <div class="header">
+    <div class="hleft">
+      <div class="dot"></div>
+      <span class="title">Claude Meter</span>
+    </div>
+    <div class="hright">
+      <button class="refresh-btn no-drag" id="refreshBtn" title="Refresh now">↻</button>
+      <button class="theme-btn no-drag" id="themeBtn" title="Toggle light / dark">◑</button>
+      <button class="min-btn no-drag" id="minBtn" title="Minimise to tray">−</button>
+      <button class="close-btn no-drag" id="closeBtn" title="Quit">✕</button>
+    </div>
+  </div>
+
+  <div class="gauges">
+    <div class="gauge-wrap">
+      <svg width="106" height="64" viewBox="0 0 100 60" style="overflow:visible">
+        <defs>
+          <linearGradient id="g1" gradientUnits="userSpaceOnUse" x1="8" y1="0" x2="92" y2="0">
+            <stop offset="0%" stop-color="#22c55e"/>
+            <stop offset="45%" stop-color="#eab308"/>
+            <stop offset="100%" stop-color="#ef4444"/>
+          </linearGradient>
+        </defs>
+        <g id="tks1"></g>
+        <path d="M10,54 A40,40 0 0,1 90,54" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8" stroke-linecap="butt" class="gauge-track"/>
+        <path d="M10,54 A40,40 0 0,1 90,54" fill="none" stroke="url(#g1)" stroke-width="8" stroke-linecap="butt" opacity="0.88"/>
+        <path d="M10,54 A40,40 0 0,1 90,54" fill="none" stroke="rgba(14,14,26,0.97)" stroke-width="9" stroke-linecap="butt" stroke-dasharray="126" id="mask1" stroke-dashoffset="-38"/>
+        <text id="v1" x="50" y="49" text-anchor="middle" fill="#22c55e" font-size="13" font-weight="600" font-family="sans-serif">--%</text>
+      </svg>
+      <div class="gauge-label">Session</div>
+      <div class="reset-time" id="resetTime"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="gauge-wrap">
+      <svg width="106" height="64" viewBox="0 0 100 60" style="overflow:visible">
+        <defs>
+          <linearGradient id="g2" gradientUnits="userSpaceOnUse" x1="8" y1="0" x2="92" y2="0">
+            <stop offset="0%" stop-color="#22c55e"/>
+            <stop offset="45%" stop-color="#eab308"/>
+            <stop offset="100%" stop-color="#ef4444"/>
+          </linearGradient>
+        </defs>
+        <g id="tks2"></g>
+        <path d="M10,54 A40,40 0 0,1 90,54" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8" stroke-linecap="butt" class="gauge-track"/>
+        <path d="M10,54 A40,40 0 0,1 90,54" fill="none" stroke="url(#g2)" stroke-width="8" stroke-linecap="butt" opacity="0.88"/>
+        <path d="M10,54 A40,40 0 0,1 90,54" fill="none" stroke="rgba(14,14,26,0.97)" stroke-width="9" stroke-linecap="butt" stroke-dasharray="126" id="mask2" stroke-dashoffset="-38"/>
+        <text id="v2" x="50" y="49" text-anchor="middle" fill="#22c55e" font-size="13" font-weight="600" font-family="sans-serif">--%</text>
+      </svg>
+      <div class="gauge-label">Weekly</div>
+      <div class="weekly-reset" id="weeklyReset"></div>
+    </div>
+  </div>
+
+  <div class="status" id="status">connecting...</div>
+  <button class="login-btn no-drag" id="loginBtn">Sign in to claude.ai</button>
+</div>
+
+<script>
+const { ipcRenderer } = require('electron');
+
+// ── Theme toggle ──────────────────────────────────────────────────────────────
+const widget   = document.querySelector('.widget');
+const themeBtn = document.getElementById('themeBtn');
+let isLight = localStorage.getItem('theme') === 'light';
+
+function applyTheme(light) {
+  widget.classList.toggle('light', light);
+  themeBtn.textContent = light ? '◐' : '◑';
+}
+themeBtn.onclick = () => {
+  isLight = !isLight;
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  applyTheme(isLight);
+};
+applyTheme(isLight);
+// ─────────────────────────────────────────────────────────────────────────────
+
+document.getElementById('minBtn').onclick  = () => ipcRenderer.send('minimize');
+document.getElementById('closeBtn').onclick = () => ipcRenderer.send('close');
+
+const refreshBtn = document.getElementById('refreshBtn');
+let spinnerTimer = null;
+refreshBtn.onclick = () => {
+  refreshBtn.classList.add('spinning');
+  document.getElementById('status').textContent = 'refreshing...';
+  document.getElementById('status').className = 'status';
+  ipcRenderer.send('manual-refresh');
+  if (spinnerTimer) clearTimeout(spinnerTimer);
+  spinnerTimer = setTimeout(() => refreshBtn.classList.remove('spinning'), 20000);
+};
+
+document.getElementById('loginBtn').onclick = () => ipcRenderer.send('open-login');
+
+function drawTicks(gId) {
+  const g = document.getElementById(gId);
+  const cx = 50, cy = 54, r = 40;
+  for (let i = 0; i <= 8; i++) {
+    const angle = (-180 + (i / 8) * 180) * Math.PI / 180;
+    const isMaj = i % 4 === 0;
+    const r1 = r - (isMaj ? 6 : 3);
+    const r2 = r + 1;
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', cx + r1 * Math.cos(angle));
+    line.setAttribute('y1', cy + r1 * Math.sin(angle));
+    line.setAttribute('x2', cx + r2 * Math.cos(angle));
+    line.setAttribute('y2', cy + r2 * Math.sin(angle));
+    line.setAttribute('stroke', isMaj ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.12)');
+    line.setAttribute('stroke-width', isMaj ? '1.5' : '0.7');
+    g.appendChild(line);
+  }
+}
+drawTicks('tks1');
+drawTicks('tks2');
+
+function setGauge(valId, maskId, pct) {
+  const revealed = (pct / 100) * 126;
+  document.getElementById(maskId).setAttribute('stroke-dashoffset', -revealed);
+  const color = pct > 80 ? '#ef4444' : pct > 55 ? '#eab308' : '#22c55e';
+  const vEl = document.getElementById(valId);
+  vEl.textContent = Math.round(pct) + '%';
+  vEl.setAttribute('fill', color);
+}
+
+// Load saved values while waiting for auto-fetch
+const s = localStorage.getItem('s'), w = localStorage.getItem('w');
+if (s) setGauge('v1', 'mask1', parseInt(s));
+if (w) setGauge('v2', 'mask2', parseInt(w));
+const rt = localStorage.getItem('rt');
+if (rt) document.getElementById('resetTime').textContent = '↺ ' + rt;
+const wr = localStorage.getItem('wr');
+if (wr) document.getElementById('weeklyReset').textContent = wr;
+
+// Receive scraped data from main process
+ipcRenderer.on('usage-update', (e, data) => {
+  if (spinnerTimer) { clearTimeout(spinnerTimer); spinnerTimer = null; }
+  refreshBtn.classList.remove('spinning');
+
+  if (data.error || (data.session === null && data.weekly === null)) {
+    const err = data.error;
+    const notLoggedIn = err === 'not_logged_in' || err === 'not_on_usage_page';
+    document.getElementById('status').textContent =
+      notLoggedIn    ? 'not logged in — sign in below' :
+      err === 'timeout' ? 'timed out — will retry' :
+                         'connection error — will retry';
+    document.getElementById('status').className = 'status err';
+    document.getElementById('loginBtn').classList.toggle('show', notLoggedIn);
+    return;
+  }
+
+  document.getElementById('loginBtn').classList.remove('show');
+
+  const now = new Date();
+  const t = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  document.getElementById('status').textContent = 'updated ' + t;
+  document.getElementById('status').className = 'status ok';
+
+  if (data.session !== null) {
+    setGauge('v1', 'mask1', data.session);
+    localStorage.setItem('s', data.session);
+  }
+  if (data.weekly !== null) {
+    setGauge('v2', 'mask2', data.weekly);
+    localStorage.setItem('w', data.weekly);
+  }
+  const resetEl = document.getElementById('resetTime');
+  if (data.resetIn) {
+    resetEl.textContent = '↺ ' + data.resetIn;
+    localStorage.setItem('rt', data.resetIn);
+  } else {
+    resetEl.textContent = '';
+  }
+
+  const weeklyEl = document.getElementById('weeklyReset');
+  if (data.weeklyReset) {
+    weeklyEl.textContent = data.weeklyReset;
+    localStorage.setItem('wr', data.weeklyReset);
+  } else {
+    weeklyEl.textContent = '';
+  }
+});
+</script>
+</body>
+</html>
