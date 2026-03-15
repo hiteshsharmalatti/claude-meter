@@ -7,7 +7,7 @@ A tiny desktop widget that auto-reads your session & weekly limits — always vi
 > **Claude Pro and Max subscribers only.** Does not work with the Claude API, free accounts, or Enterprise/Teams plans.
 
 ![Claude Meter Widget](https://github.com/user-attachments/assets/5a2a7b83-997a-444b-895f-29df154e965e)
-https://github.com/user-attachments/assets/897a040a-e1ce-4f47-9cb1-4ec6cffe26c2 
+(https://github.com/user-attachments/assets/897a040a-e1ce-4f47-9cb1-4ec6cffe26c2)
 
 ---
 
